@@ -1,8 +1,8 @@
 #---------------------------------------------------------------------#
 #Name - IR&NECDataCollect.py
 #Description - Reads data from the IR sensor but uses the official NEC Protocol
-#Author - Will Hall
-#Licence - Attribution Lime
+#Author - Lime Parallelogram
+#Licence - Standard Git Hub Licence
 #Date - 06/07/19
 #---------------------------------------------------------------------#
 #Imports modules
