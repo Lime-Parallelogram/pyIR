@@ -11,7 +11,6 @@ import pygame
 import pygame.display
 from time import sleep
 from datetime import datetime
-import pyperclip
 
 #==================#
 #Gets the input pin from user
@@ -48,7 +47,7 @@ def showResults(cmd): #Shows the results of the tests on the GUI
 	writeText("Hex Command: " + str(cmd), "Arial", 14, [25,130], [0,0,0])
 	#Copy Data Button --
 	pygame.draw.rect(UI, (9,115,238), (5,167, 230, 30),0)
-	writeText("Copy Command", "Arial", 16, [66,172], [255,255,255])
+	writeText("Save Command", "Arial", 16, [66,172], [255,255,255])
 	pygame.display.update()
 	###
 
@@ -135,7 +134,9 @@ while True:
 			if y > 55 and y < 85: #Start test button
 				finalData = runTest()
 			if y > 167 and y < 197: #Copy data button
-				pyperclip.copy(str(finalData))
+				output = open("output.txt", 'w')
+				output.write(str(finalData))
+				output.close()
 		if event.type == pygame.QUIT:
 			GPIO.cleanup()
 			exit()
