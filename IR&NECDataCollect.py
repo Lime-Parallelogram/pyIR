@@ -1,9 +1,9 @@
 #---------------------------------------------------------------------#
 #Name - IR&NECDataCollect.py
 #Description - Reads data from the IR sensor but uses the official NEC Protocol
-#Author - Will Hall
+#Author - Lime Parallelogram
 #Licence - Attribution Lime
-#Date - 06/07/19
+#Date - 06/07/19 - 18/08/19
 #---------------------------------------------------------------------#
 #Imports modules
 import RPi.GPIO as GPIO
@@ -18,20 +18,21 @@ pygame.init()
 pygame.display.init()
 
 #==================#
-class TextEntry:
+class TextEntry: #Home made prompt for getting information
 	global prompt
 	global UI
 	def showPrompt(self, starttext):
 		global prompt
 		size = (400, 120)
 		#---------#
-		keyIcon = pygame.image.load("res/keyboard-icon.png")
-		pygame.display.set_caption("Input Prompt")
+		keyIcon = pygame.image.load("res/keyboard-icon.png") #Shows keyboard icon
+		pygame.display.set_caption("Input Prompt") #Sets caption
 		pygame.display.set_icon(keyIcon)
 		prompt = pygame.display.set_mode(size)
-		prompt.fill((255,255,255))
+		prompt.fill((255,255,255)) #Sets colour to white
 		
 		#---------#
+		#Shows text displayed to ask question
 		FontDATA = pygame.font.SysFont("Arial", 20)
 		textRENDER = FontDATA.render(starttext, True, (191,181,171))
 		prompt.blit(textRENDER, (5,5))
@@ -40,29 +41,27 @@ class TextEntry:
 		
 	def getInput(self):
 		global prompt
-		FontDATA = pygame.font.SysFont("Arial", 15)
+		FontDATA = pygame.font.SysFont("Arial", 15) #Font used for text preview
 		word = ""
 		while True:
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					import sys
-					sys.exit()
+					sys.exit() #Closes full application
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_RETURN:
 						return word
-						pygame.draw.rect(UI, (255,255,255) (0,0,0,0), 0)
-						pygame.display.update()
 						break
 					elif event.key == pygame.K_BACKSPACE:
-						word = word[:len(word)-1]
+						word = word[:len(word)-1] #Removes last letter from string
 					else:
-						try:
-							word = word + chr(event.key)
+						try: #Filters out any other keys e.g. shift
+							word = word + chr(event.key) #Adds letters
 						except:
 							pass
 						
-					pygame.draw.rect(prompt, (255,255,255), (5,25, 390, 20), 0)
-					textRENDER = FontDATA.render(word, True, (191,181,171))
+					pygame.draw.rect(prompt, (255,255,255), (5,25, 390, 20), 0) #Covers up old text
+					textRENDER = FontDATA.render(word, True, (191,181,171)) #Renders new text (what has been typed)
 					prompt.blit(textRENDER, (5,25))
 					pygame.display.update()
 					###
@@ -70,6 +69,7 @@ class TextEntry:
 #==================#
 #Promps for values
 Prompt = TextEntry()
+#Input pin
 Prompt.showPrompt("Please enter your reciever pin:")
 PinIn = ""
 while True:
@@ -79,6 +79,7 @@ while True:
 		break
 	except:
 		pass
+#Remote name
 Prompt.showPrompt("Please enter a remote name:")
 remote = Prompt.getInput()
 
@@ -95,36 +96,37 @@ GPIO.setup(PinIn,GPIO.IN)
 
 #==================#
 #Defines Subs
-def showPrompt(starttext):		
+def showPrompt(starttext): #Shows onscreen save button prompt		
 		#---------#
-		FontDATA = pygame.font.SysFont("Arial", 15)
+		FontDATA = pygame.font.SysFont("Arial", 15) #Shows save button text
 		textRENDER = FontDATA.render(starttext, True, (191,181,171))
 		UI.blit(textRENDER, (5,205))
 		pygame.display.update()
 		###
 		
 def getInput():
+	#Gets input from main window
 	FontDATA = pygame.font.SysFont("Arial", 15)
 	word = ""
 	while True:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				return ''
-				break
+				import sys
+				sys.exit() #Closes program
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_RETURN:
-					pygame.draw.rect(UI, (255,255,255), (5,205,200,50), 0)
+					pygame.draw.rect(UI, (255,255,255), (5,205,200,50), 0) #Covers Input
 					pygame.display.update()
 					return word
 				elif event.key == pygame.K_BACKSPACE:
-					word = word[:len(word)-1]
+					word = word[:len(word)-1] #Removes characters
 				else:
-					try:
-						word = word + chr(event.key)
+					try: #Removes errors caused by other buttons e.g. shift
+						word = word + chr(event.key) #Adds characters
 					except:
 						pass
-				pygame.draw.rect(UI, (255,255,255), (5,225, 390, 20), 0)
-				textRENDER = FontDATA.render(word, True, (191,181,171))
+				pygame.draw.rect(UI, (255,255,255), (5,225, 390, 20), 0) #Blanks input area
+				textRENDER = FontDATA.render(word, True, (191,181,171)) #Writes new text
 				UI.blit(textRENDER, (5,225))
 				pygame.display.update()
 				###
