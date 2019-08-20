@@ -70,7 +70,7 @@ class TextEntry: #Home made prompt for getting information
 #Promps for values
 Prompt = TextEntry()
 #Input pin
-Prompt.showPrompt("Please enter your reciever pin:")
+Prompt.showPrompt("Please enter your receiver pin:")
 PinIn = ""
 while True:
 	PinIn = Prompt.getInput()
