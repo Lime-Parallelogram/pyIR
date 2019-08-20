@@ -87,7 +87,6 @@ def getData(): #Pulls data from sensor
 	
 def runTest(): #Actually runs the test
 	#Takes samples
-	setShownState("Awaiting Data....", [203,58,53])
 	command = ConvertHex(getData())
 	print("Hex value: " + str(command)) #Shows results on the screen
 	return command
