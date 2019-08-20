@@ -97,8 +97,8 @@ def runTest(): #Actually runs the test
 while True:
   if input("Press enter to start. Type q to quit. ") == 'q':
     break
-	finalData = runTest()
-	if input("Save? y/n.") == 'y':
+  finalData = runTest()
+  if input("Save? y/n.") == 'y':
     name = input("Enter a name for your button: ")
     output = open(remote+".txt", 'a')
     output.writelines("""
