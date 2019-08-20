@@ -14,14 +14,14 @@ from datetime import datetime
 #Promps for values
 #Input pin
 while True:
-	PinIn = input("Please enter your sensor pin: ")
+	PinIn = raw_input("Please enter your sensor pin: ")
 	try:
 		PinIn = int(PinIn)
 		break
 	except:
 		pass
 #Remote name
-remote = input("Please enter a name for you remote: ")
+remote = raw_input("Please enter a name for you remote: ")
 
 #==================#
 #Creates output file
@@ -95,11 +95,11 @@ def runTest(): #Actually runs the test
 #==================#
 #Main program loop
 while True:
-  if input("Press enter to start. Type q to quit. ") == 'q':
+  if raw_input("Press enter to start. Type q to quit. ") == 'q':
     break
   finalData = runTest()
-  if input("Save? y/n.") == 'y':
-    name = input("Enter a name for your button: ")
+  if raw_input("Save? y/n.") == 'y':
+    name = raw_input("Enter a name for your button: ")
     output = open(remote+".txt", 'a')
     output.writelines("""
 Button Code - """ + name + ": " + str(finalData))
