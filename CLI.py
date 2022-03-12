@@ -1,107 +1,126 @@
 #---------------------------------------------------------------------#
-#Name - IR&NECDataCollect.py
-#Description - Reads data from the IR sensor but uses the official NEC Protocol (command line version)
-#Author - Lime Parallelogram
-#Licence - Attribution Lime
-#Date - 06/07/19 - 18/08/19
+# File: /home/will/OneDrive/PiSpace/ByProject/Old YouTube Fix-Up/IR Code Decoder/IR-Code-Decoder--/CLI.py
+# Project: /home/will/OneDrive/PiSpace/ByProject/Old YouTube Fix-Up/IR Code Decoder/IR-Code-Decoder--
+# Created Date: Saturday, July 6th 2019, 8:54:52 pm
+# Description: Reads data from an IR Sensor
+# Author: Will Hall
+# Copyright (c) 2022 Lime Parallelogram
+# -----
+# Last Modified: Sat Mar 12 2022
+# Modified By: Will Hall
+# -----
+# HISTORY:
+# Date          By    Comments
+# ----------    ---    ---------------------------------------------------------
+# 2022-03-08    WH    Loaded original file for editing
 #---------------------------------------------------------------------#
 #Imports modules
-import RPi.GPIO as GPIO
-from time import sleep
-from datetime import datetime
-	
-#==================#
-#Promps for values
-#Input pin
+import time
+import pyIR
+from colorama import Fore
+
+# ----------------- #
+# Program constants
+VALID_PINS = [1,3,5,7,8,10,11,12,13,15,16,18,19,21,22,23,24,26,29,31,32,33,35,36,37,38,40]
+
+# ========================================= #
+# Program Subroutines
+# ----------------- #
+# Present the main list of options to the user
+def presentMainMenu():
+    print()
+    print("Chose an option to manage remotes: ")
+    print("        N : Create new remote object")
+    print("        L : Load remote from file")
+    print("        V : View remote information")
+    print("        A : Add buttons to remote")
+    print("        S : Save remote to file")
+    print("        T : Test button configuration by listening")
+    print("        Q : Quit application")
+
+    return input("Enter option : ").upper()
+
+# ----------------- #
+# Menu used to add buttons to a remote
+def buttonAdd(sensor,remote):
+    print("Welcome to button recording mode.")
+    print("Once you enter all of the buttons you want to add, you will be prompted to press all of the buttons.")
+
+    buttonNames = []
+    while True:
+        name = input("Enter the name of a button to add [leave blank when complete]: ")
+
+        if name == "":
+            break
+    
+        buttonNames.append(name)
+
+    for button in buttonNames:
+        print(f"Press button {button} now.")
+        remote.recordButton(sensor,button)
+        time.sleep(1)
+
+# ----------------- #
+# Check if a remote is open for editing and warn if not
+def remoteLoaded(remote):
+    if type(remote) == pyIR.Remote:
+        return True
+
+    print(Fore.RED+"No remote object is open for editing. Create or load a remote to perform this function!"+Fore.RESET)
+    return False
+
+# ========================================= #
+# Create a sensor object
+PinIn = input("Please enter your sensor pin: ")
+
+while not PinIn in map(str,VALID_PINS):
+    PinIn = input("INVALID PIN ENTERED! Please enter your sensor pin: ")
+
+mySensor = pyIR.Receiver(int(PinIn))
+
+# ----------------- #
+# Main program execution
+print("# ======================================================= #")
+print("     Welcome to pyIR remote management utility.")
+print(Fore.GREEN+"        Revision 2.0 - By Lime Parallelogram"+Fore.RESET)
+print("# ======================================================= #")
+myRemote = ""
+
 while True:
-	PinIn = raw_input("Please enter your sensor pin: ")
-	try:
-		PinIn = int(PinIn)
-		break
-	except:
-		pass
-#Remote name
-remote = raw_input("Please enter a name for you remote: ")
+    choice = presentMainMenu()
 
-#==================#
-#Creates output file
-output = open(remote+".txt", 'a')
-output.writelines("Button codes regarding " + remote + " IR controller:")
-output.close()
+    if choice == "L": # Load remote from save
+        try:
+            filename = input("Filename to load: ")
+            myRemote = pyIR.loadRemote(filename)
+        except FileNotFoundError:
+            print(Fore.RED+"The requested file could not be loaded."+Fore.RESET)
 
-#==================#
-#Sets up GPIO
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(PinIn,GPIO.IN)
+    elif choice == "N": # Create a new remote
+        remoteName = input("Please enter a name for you remote: ")
+        myRemote = pyIR.Remote(remoteName,pyIR.NEC)
 
-#==================#
-#Defines Subs	
-def ConvertHex(BinVal): #Converts binary data to hexidecimal
-	tmpB2 = int(str(BinVal), 2)
-	return hex(tmpB2)
-		
-def getData(): #Pulls data from sensor
-	num1s = 0 #Number of consecutive 1s
-	command = [] #Pulses and their timings
-	binary = 1 #Decoded binary command
-	previousValue = 0 #The previous pin state
-	value = GPIO.input(PinIn) #Current pin state
-	
-	while value: #Waits until pin is pulled low
-		value = GPIO.input(PinIn)
-	
-	startTime = datetime.now() #Sets start time
-	
-	while True:
-		if value != previousValue: #Waits until change in state occurs
-			now = datetime.now() #Records the current time
-			pulseLength = now - startTime #Calculate time in between pulses
-			startTime = now #Resets the start time
-			command.append((previousValue, pulseLength.microseconds)) #Adds pulse time to array (previous val acts as an alternating 1 / 0 to show whether time is the on time or off time)
-		
-		#Interrupts code if an extended high period is detected (End Of Command)	
-		if value:
-			num1s += 1
-		else:
-			num1s = 0
-		
-		if num1s > 10000:
-			break
-		
-		#Reads values again
-		previousValue = value
-		value = GPIO.input(PinIn)
-		
-	#Covers data to binary
-	for (typ, tme) in command:
-		if typ == 1:
-			if tme > 1000: #According to NEC protocol a gap of 1687.5 microseconds repesents a logical 1 so over 1000 should make a big enough distinction
-				binary = binary * 10 + 1
-			else:
-				binary *= 10
-				
-	if len(str(binary)) > 34: #Sometimes the binary has two rouge charactes on the end
-		binary = int(str(binary)[:34])
-		
-	return binary
-	
-def runTest(): #Actually runs the test
-	#Takes samples
-	command = ConvertHex(getData())
-	print("Hex value: " + str(command)) #Shows results on the screen
-	return command
-	###
+        # Conveniently add buttons at the same time
+        if input("Would you like to add buttons now? [y/N] ").upper() == "Y":
+            buttonAdd(mySensor,myRemote)
 
-#==================#
-#Main program loop
-while True:
-  if raw_input("Press enter to start. Type q to quit. ") == 'q':
-    break
-  finalData = runTest()
-  if raw_input("Save? y/n.") == 'y':
-    name = raw_input("Enter a name for your button: ")
-    output = open(remote+".txt", 'a')
-    output.writelines("""
-Button Code - """ + name + ": " + str(finalData))
-    output.close()
-GPIO.cleanup()
+    elif choice == "V": # Display a representation of the current remote
+        if remoteLoaded(myRemote):
+            myRemote.displayButtons()
+
+    elif choice == "A": # Add buttons to remote
+        if remoteLoaded(myRemote):
+            buttonAdd(mySensor,myRemote)
+    
+    elif choice == "S": # Save remote information to file
+        if remoteLoaded(myRemote):
+            filename = input("Filename to write: ")
+            myRemote.saveRemote(filename)
+    
+    elif choice == "T": # Test the button configuration by listening
+        if remoteLoaded(myRemote):
+            button = mySensor.listen(remotes=[myRemote])
+            print(f"The button '{button.getNickname()}' was pressed.")
+
+    elif choice == "Q":
+        break
