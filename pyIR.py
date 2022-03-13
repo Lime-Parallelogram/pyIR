@@ -5,12 +5,13 @@
 # Description: A new Object-Oriented approach to an IR Code receiver module
 # Author: Will Hall
 # -----
-# Last Modified: Sat Mar 12 2022
+# Last Modified: Sun Mar 13 2022
 # Modified By: Will Hall
 # -----
 # HISTORY:
 # Date      	By	Comments
 # ----------	---	---------------------------------------------------------
+# 2022-03-13	WH	Code values for remotes stored as base 10 integers
 # 2022-03-11	WH	Added listen option to identify incoming commands
 # 2022-03-10	WH	Moved remote load outside of remote class and added functionality to load nickname and protocol properties.
 # 2022-03-09	WH	Added load and save function to system
@@ -82,7 +83,7 @@ class Receiver:
         while True:
             raw = self.getRAW()
             for remote in remotes:
-                match = remote.identifyButton(remote.getBinary(raw))
+                match = remote.identifyButton(remote.getIntegerCode(raw))
                 if match != -1:
                     return match
 
@@ -91,7 +92,7 @@ class Receiver:
 class NEC:
     # ----------------- #
     # Take the data about the times of pulses and convert to a binary data string according to NEC protocol
-    def getBinary(self,rawDATA):
+    def getIntegerCode(self,rawDATA):
         binary = 1 # Decoded binary command
         
         # Covers data to binary
@@ -105,7 +106,7 @@ class NEC:
         if len(str(binary)) > 34: # Sometimes the binary has two rouge characters on the end
             binary = int(str(binary)[:34])
         
-        return binary
+        return int(str(binary),2)
     
     def getClassName(self):
         return "NEC"
@@ -121,15 +122,15 @@ class Remote:
         self.protcol = protocol()
     
     # Return the binary value from raw data using the remote's protocol's method
-    def getBinary(self, raw):
-        return self.protcol.getBinary(raw)
+    def getIntegerCode(self, raw):
+        return self.protcol.getIntegerCode(raw)
 
     # Reccord a new button using sensor capture
     def recordButton(self,sensor : Receiver, buttonNickname):
         print("Ready to record data. Press the button on your remote! ")
         rawData = sensor.getRAW()
-        binary = self.getBinary(rawData)
-        self.buttons.append(Button(buttonNickname,binary))
+        code = self.getIntegerCode(rawData)
+        self.buttons.append(Button(buttonNickname,code))
 
     # Pint out a table that shows all of the buttons in the current remote
     def displayButtons(self):
@@ -157,13 +158,13 @@ class Remote:
                 file.writelines(button.getData()+"|")
     
     # Add a button with given name and binary
-    def addButton(self,name,binary):
-        self.buttons.append(Button(name,binary))
+    def addButton(self,name,integerValue):
+        self.buttons.append(Button(name,integerValue))
 
     # Return button object based on given binary value
-    def identifyButton(self,binary):
+    def identifyButton(self,code):
         for button in self.buttons:
-            if button.getBinary() == str(binary):
+            if button.getIntegerCode() == code:
                 return button
 
         return -1
@@ -173,24 +174,23 @@ class Remote:
 class Button:
     """An individual button object"""
 
-    def __init__(self,name,binary):
+    def __init__(self,name,code):
         self.nickname = name
-        self.binary = binary
+        self.integerCode = code
 
     # ----------------- #
     # Simple getter and setter methods #
     def getNickname(self):
         return self.nickname
     
-    def getBinary(self):
-        return self.binary
+    def getIntegerCode(self):
+        return self.integerCode
     
     def getHex(self):
-        tmpB2 = int(str(self.binary), 2)
-        return hex(tmpB2)
+        return hex(self.integerCode)
     
     def getData(self): # Get data in format that can be written to data file
-        return ",".join([self.nickname,str(self.binary)])
+        return ",".join([self.nickname,str(self.integerCode)])
 
 # ========================================= #
 #^ Create a remote object from an information file ^#
@@ -213,7 +213,7 @@ def loadRemote(filename):
         for button in remoteInfo["buttons"].split("|"): # Different buttons separated by '|'
             if button != "":
                 buttonDat = button.split(",") # Button information separated by commas
-                newRemote.addButton(buttonDat[0],buttonDat[1])
+                newRemote.addButton(buttonDat[0],int(buttonDat[1]))
         
         return newRemote
 
